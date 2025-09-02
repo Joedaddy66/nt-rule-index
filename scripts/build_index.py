@@ -43,11 +43,11 @@ def build_index(rows, rules):
         lines.append(f"## {title} ({t})\n")
         for row in sorted(by_tag[t], key=lambda r: r.get("title","").lower()):
             link = md_link(row.get("title","(untitled)"), row.get("drive_url",""))
-            summary = row.get("summary","").strip()
-            next_action = row.get("next_action","").strip()
-            notes = row.get("notes","").strip()
+            summary = (row.get("summary","") or "").strip()
+            next_action = (row.get("next_action","") or "").strip()
+            notes = (row.get("notes","") or "").strip()
             meta = ", ".join([m for m in [row.get("source","").strip(), row.get("id","").strip()] if m])
-            lines.append(f"- {link}  \n  _{meta}_  \n  {summary if summary else ''}")
+            lines.append(f"- {link}  \n  _{meta}_  \n  {summary}")
             if next_action: lines.append(f"  \n  **Next:** {next_action}")
             if notes: lines.append(f"  \n  **Notes:** {notes}")
             lines.append("")
@@ -57,7 +57,7 @@ def build_index(rows, rules):
 if __name__ == "__main__":
     rules = load_rules()
     rows  = read_rows()
-    os.makedirs(os.path.dirname(OUT_MD), exist_ok=True)
+    os.makedirs(os.path.join(ROOT,"docs"), exist_ok=True)
     with open(OUT_MD, "w", encoding="utf-8") as f:
         f.write(build_index(rows, rules))
     print(f"Wrote {OUT_MD}")
