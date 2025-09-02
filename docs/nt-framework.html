@@ -1,5 +1,297 @@
-﻿(Get-Clipboard -Raw) | Set-Content -Encoding utf8 .\docs\nt-framework.html
-git add .\docs\nt-framework.html
-git commit -m "feat: add full NT Framework SPA"
-git push
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NT Strategy Framework</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Harmony -->
+    <!-- Application Structure Plan: The SPA is designed as a vertical, single-page dashboard. The main content is organized into logical sections: a summary, a dynamic comparison of the current vs. proposed systems, a visualization of the CI/CD pipelines, and collapsible sections for the roadmap and recommendations. A sticky top-level navigation allows for quick jumps to each section. This structure was chosen to provide a non-linear exploration path, empowering the user to focus on the areas of most interest without having to scroll through the entire document linearly. The key interaction—a toggle for the comparison matrix—is the central feature, making the strategic argument clear and compelling. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Strategic Document sections. Goal: Organize/Navigate. Viz/Method: Sticky navigation bar with buttons. Interaction: Click to scroll to section. Justification: Provides a persistent, clear way to navigate the single page, which is critical for a multi-section dashboard. Method: HTML/CSS/JS.
+        - Report Info: Current vs. Proposed system comparison. Goal: Compare. Viz/Method: A comparative matrix with a toggle switch. Interaction: Click to swap content between the 'Current' and 'Proposed' columns. Justification: This dynamic side-by-side view is far more effective than a static table, highlighting the benefits of the proposed system in an interactive way. Method: HTML/CSS/JS.
+        - Report Info: CI/CD Pipeline steps. Goal: Explain Process. Viz/Method: Flowchart diagram using HTML/CSS boxes and Unicode arrows. Interaction: None, the visual representation itself is the core interaction. Justification: Visualizing the steps simplifies a complex technical process, making it easy to understand at a glance. Method: HTML/CSS/Unicode.
+        - Report Info: Roadmap & Recommendations. Goal: Inform/Organize. Viz/Method: Collapsible accordion sections. Interaction: Click to expand/collapse. Justification: This pattern keeps the UI clean by hiding detailed information until the user explicitly requests it, preventing information overload. Method: HTML/CSS/JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #40322C;
+        }
+        .container {
+            max-width: 1024px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 1.5rem;
+        }
+        .scroll-button {
+            transition: background-color 0.2s;
+        }
+        .scroll-button:hover {
+            background-color: #EAE3D9;
+        }
+        .toggle-switch {
+            width: 90px;
+            height: 36px;
+        }
+        .toggle-knob {
+            width: 44px;
+            height: 32px;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .toggle-knob.current-active {
+            transform: translateX(0);
+        }
+        .toggle-knob.proposed-active {
+            transform: translateX(calc(100% - 4px));
+        }
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #DCD2C5;
+            border-radius: 0.75rem;
+            min-height: 80px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .pipeline-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #A88B64;
+            margin: 0.5rem 0;
+        }
+        .accordion-header {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .accordion-header:hover {
+            background-color: #F4F0EB;
+        }
+        .accordion-content {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#FDFBF8]">
 
+    <nav class="sticky top-0 bg-white shadow-md z-50">
+        <div class="container flex flex-wrap justify-center sm:justify-between items-center py-4 space-x-2">
+            <h1 class="text-2xl font-bold text-[#40322C] mb-2 sm:mb-0">NT Framework</h1>
+            <div class="flex space-x-2 sm:space-x-4 flex-wrap justify-center">
+                <button class="scroll-button px-4 py-2 rounded-lg text-sm sm:text-base font-medium text-[#6E5F57]" onclick="document.getElementById('overview').scrollIntoView({ behavior: 'smooth' })">Overview</button>
+                <button class="scroll-button px-4 py-2 rounded-lg text-sm sm:text-base font-medium text-[#6E5F57]" onclick="document.getElementById('comparison').scrollIntoView({ behavior: 'smooth' })">Comparison</button>
+                <button class="scroll-button px-4 py-2 rounded-lg text-sm sm:text-base font-medium text-[#6E5F57]" onclick="document.getElementById('ci-cd').scrollIntoView({ behavior: 'smooth' })">CI/CD</button>
+                <button class="scroll-button px-4 py-2 rounded-lg text-sm sm:text-base font-medium text-[#6E5F57]" onclick="document.getElementById('roadmap').scrollIntoView({ behavior: 'smooth' })">Roadmap</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-8">
+        <section id="overview" class="mb-12">
+            <h2 class="text-3xl font-bold mb-4">Strategic Framework for Number Theory Assets</h2>
+            <p class="text-[#6E5F57] mb-6">This interactive document outlines a strategic plan to evolve a number theory research asset management system. It begins with an analysis of the existing PowerShell-based Git repository and its Python-driven build process. The core of this analysis is a proposal to upgrade the system to a static website using MkDocs, which provides a more professional, browsable, and scalable knowledge base. The application allows for a dynamic comparison of the two systems and a clear visualization of their respective automation pipelines, culminating in an actionable roadmap for implementation and future development.</p>
+        </section>
+
+        <section id="comparison" class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-center">Current vs. Proposed System</h2>
+            <div class="flex justify-center items-center mb-6">
+                <div class="font-semibold text-sm mr-2 text-[#6E5F57]">Current</div>
+                <div id="toggle-container" class="toggle-switch bg-[#A88B64] rounded-full p-0.5 relative">
+                    <div id="toggle-knob" class="toggle-knob bg-white rounded-full shadow-md current-active"></div>
+                </div>
+                <div class="font-semibold text-sm ml-2 text-[#40322C]">Proposed</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">Current System</h3>
+                        <p class="text-[#6E5F57] mb-4">Based on a PowerShell scaffold and Python builder, this system is functional but limited in its presentation and user experience.</p>
+                        <div id="current-content"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">Proposed System (MkDocs)</h3>
+                        <p class="text-[#6E5F57] mb-4">The proposed upgrade to MkDocs provides a modern, professional, and scalable solution for managing and publishing knowledge assets.</p>
+                        <div id="proposed-content"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ci-cd" class="mb-12">
+            <h2 class="text-3xl font-bold mb-4">Automated Pipelines</h2>
+            <p class="text-[#6E5F57] mb-6">This section visualizes the two different CI/CD pipelines described in the strategic document. Explore how the automation process changes with the transition from a simple build to a full static site deployment.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-center">Current Pipeline (`build-index.yml`)</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                        <div class="pipeline-step">
+                            <p class="font-medium">1. Push to `main` or `master`</p>
+                        </div>
+                        <div class="pipeline-arrow">&#x2193;</div>
+                        <div class="pipeline-step">
+                            <p class="font-medium">2. Actions Checkout (`actions/checkout@v4`)</p>
+                        </div>
+                        <div class="pipeline-arrow">&#x2193;</div>
+                        <div class="pipeline-step">
+                            <p class="font-medium">3. Setup Python (`actions/setup-python@v5`)</p>
+                        </div>
+                        <div class="pipeline-arrow">&#x2193;</div>
+                        <div class="pipeline-step">
+                            <p class="font-medium">4. Build Index (`python scripts/build_index.py`)</p>
+                        </div>
+                        <div class="pipeline-arrow">&#x2193;</div>
+                        <div class="pipeline-step">
+                            <p class="font-medium">5. Upload Artifact (`actions/upload-artifact@v4`)</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-center">Proposed MkDocs Pipeline</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm space-y-4">
+                        <div class="pipeline-step">
+                            <p class="font-medium">1. Push to `main` or `master`</p>
+                        </div>
+                        <div class="pipeline-arrow">&#x2193;</div>
+                        <div class="pipeline-step">
+                            <p class="font-medium">2. `mkdocs-material` Build (`mkdocs build`)</p>
+                        </div>
+                        <div class="pipeline-arrow">&#x2193;</div>
+                        <div class="pipeline-step">
+                            <p class="font-medium">3. **Deployment** (`peaceiris/actions-gh-pages@v3`)</p>
+                        </div>
+                        <div class="pipeline-arrow">&#x2193;</div>
+                        <div class="pipeline-step">
+                            <p class="font-medium">4. Publish to GitHub Pages</p>
+                        </div>
+                        <div class="pipeline-arrow">&#x2193;</div>
+                        <div class="pipeline-step">
+                            <p class="font-medium">5. **Live, public-facing website**</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap" class="mb-12">
+            <h2 class="text-3xl font-bold mb-4">Implementation Roadmap & Recommendations</h2>
+            <p class="text-[#6E5F57] mb-6">This section outlines the step-by-step plan for implementing the MkDocs upgrade and provides forward-looking recommendations for continued development. Click on each title to expand the details.</p>
+
+            <div class="bg-white rounded-2xl shadow-sm">
+                <div id="accordion-1" class="accordion-header p-6 border-b border-[#F4F0EB]">
+                    <div class="flex justify-between items-center font-bold">
+                        <span>Implementation Roadmap</span>
+                        <span>&#x25B8;</span>
+                    </div>
+                </div>
+                <div class="accordion-content p-6 text-[#6E5F57]">
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>Initialize MkDocs: Run `mkdocs new .` to create the project structure.</li>
+                        <li>Configure MkDocs: Update `mkdocs.yml` to reflect the desired navigation (`nav` section from `RULE_PACKS.json`), theme, and plugins.</li>
+                        <li>Update Builder: Modify `scripts/build_index.py` to output Markdown files compatible with MkDocs, using frontmatter for titles and other metadata.</li>
+                        <li>Configure CI/CD: Create a new GitHub Actions workflow to build and deploy the MkDocs site to GitHub Pages.</li>
+                        <li>Migrate Content: Convert existing Markdown content and CSV data into the new MkDocs-compatible structure.</li>
+                        <li>Test & Deploy: Validate the local build and push the changes to trigger the automated deployment.</li>
+                    </ul>
+                </div>
+
+                <div id="accordion-2" class="accordion-header p-6 border-b border-[#F4F0EB]">
+                    <div class="flex justify-between items-center font-bold">
+                        <span>Forward-Looking Recommendations</span>
+                        <span>&#x25B8;</span>
+                    </div>
+                </div>
+                <div class="accordion-content p-6 text-[#6E5F57]">
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>Custom Domain: Point a custom domain to the GitHub Pages site for a professional brand identity.</li>
+                        <li>Advanced Plugins: Explore plugins like `mkdocs-material-extensions` for advanced features such as social cards, improved search, and code block enhancements.</li>
+                        <li>Automated Dependency Updates: Implement a tool like Dependabot to automatically manage and update project dependencies for security and stability.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const comparisonData = {
+            current: [
+                { title: "Navigation", desc: "Limited to a single, long Markdown page, requiring manual scrolling." },
+                { title: "Search", desc: "Basic browser-level text search (`Ctrl+F`). No dedicated search functionality." },
+                { title: "Theming", desc: "No specific theme; presentation is dictated by the viewer's Markdown renderer." },
+                { title: "Scalability", desc: "Difficult to manage and navigate as content grows. A single file becomes unwieldy." },
+                { title: "Local Preview", desc: "Requires a local Markdown viewer or a Git client to render the file." },
+                { title: "CI/CD", desc: "Automates the build process but requires manual intervention to share the generated file." }
+            ],
+            proposed: [
+                { title: "Navigation", desc: "Organized sidebars and breadcrumbs for intuitive browsing across multiple pages." },
+                { title: "Search", desc: "Integrated, powerful full-text search across the entire site." },
+                { title: "Theming", desc: "Professional and customizable themes (e.g., MkDocs Material) for a consistent look." },
+                { title: "Scalability", desc: "Designed for multiple pages and hierarchical content, allowing for easy expansion." },
+                { title: "Local Preview", desc: "A simple command (`mkdocs serve`) provides a live-reloading server for local development." },
+                { title: "CI/CD", desc: "Automates the entire pipeline, from build to deployment on GitHub Pages, creating a live website." }
+            ]
+        };
+
+        const currentContentDiv = document.getElementById('current-content');
+        const proposedContentDiv = document.getElementById('proposed-content');
+        const toggleKnob = document.getElementById('toggle-knob');
+        const toggleContainer = document.getElementById('toggle-container');
+
+        const renderContent = () => {
+            currentContentDiv.innerHTML = comparisonData.current.map(item => `
+                <div class="bg-[#F4F0EB] p-4 rounded-lg mb-4">
+                    <h4 class="font-medium text-[#40322C] mb-1">${item.title}</h4>
+                    <p class="text-sm text-[#6E5F57]">${item.desc}</p>
+                </div>
+            `).join('');
+
+            proposedContentDiv.innerHTML = comparisonData.proposed.map(item => `
+                <div class="bg-[#F4F0EB] p-4 rounded-lg mb-4">
+                    <h4 class="font-medium text-[#40322C] mb-1">${item.title}</h4>
+                    <p class="text-sm text-[#6E5F57]">${item.desc}</p>
+                </div>
+            `).join('');
+        };
+
+        const handleToggle = () => {
+            if (toggleKnob.classList.contains('current-active')) {
+                toggleKnob.classList.remove('current-active');
+                toggleKnob.classList.add('proposed-active');
+                currentContentDiv.classList.add('hidden');
+                proposedContentDiv.classList.remove('hidden');
+            } else {
+                toggleKnob.classList.remove('proposed-active');
+                toggleKnob.classList.add('current-active');
+                currentContentDiv.classList.remove('hidden');
+                proposedContentDiv.classList.add('hidden');
+            }
+        };
+
+        toggleContainer.addEventListener('click', handleToggle);
+        
+        const accordions = document.querySelectorAll('.accordion-header');
+        accordions.forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const arrow = header.querySelector('span:last-child');
+                const isExpanded = content.style.display === 'block';
+
+                content.style.display = isExpanded ? 'none' : 'block';
+                arrow.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(90deg)';
+            });
+        });
+
+        renderContent();
+    </script>
+</body>
+</html>
