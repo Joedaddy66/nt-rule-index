@@ -1,26 +1,8 @@
 ﻿{
-  "FACTORIZATION": {
-    "title": "Factorization & Smoothness",
-    "desc": "ECM/QS/GNFS behavior, semiprimes, smoothness, divisor metrics."
-  },
-  "RSA_STRUCTURE": {
-    "title": "RSA Structure (p,q geometry, λ)",
-    "desc": "Keygen heuristics, |p - q| effects, λ-resilience."
-  },
-  "ANALYTIC_PROB_NT": {
-    "title": "Analytic/Probabilistic NT",
-    "desc": "Prime density, sieves, PNT-adjacent heuristics."
-  },
-  "SPECTRAL_METHODS": {
-    "title": "Spectral / Frequency Methods",
-    "desc": "Fourier views on primes, gaps, and numerical signals."
-  },
-  "ENTROPY_FEATURES": {
-    "title": "Entropy & Feature Engineering",
-    "desc": "Bond Strength (BS), anchors, eigenstates, primorial hubs."
-  },
-  "CRYPTO_POLICY_PQC": {
-    "title": "Crypto Policy & PQC Transition",
-    "desc": "Risk posture, migration guidance, hybrid schedules."
-  }
+  "FACTORIZATION": { "title": "Factorization & Smoothness", "desc": "ECM/QS/GNFS behavior, semiprimes, smoothness, divisor metrics." },
+  "RSA_STRUCTURE": { "title": "RSA Structure (p,q geometry, λ)", "desc": "Keygen heuristics, |p - q| effects, λ-resilience." },
+  "ANALYTIC_PROB_NT": { "title": "Analytic/Probabilistic NT", "desc": "Prime density, sieves, PNT-adjacent heuristics." },
+  "SPECTRAL_METHODS": { "title": "Spectral / Frequency Methods", "desc": "Fourier views on primes, gaps, and numerical signals." },
+  "ENTROPY_FEATURES": { "title": "Entropy & Feature Engineering", "desc": "Bond Strength (BS), anchors, eigenstates, primorial hubs." },
+  "CRYPTO_POLICY_PQC": { "title": "Crypto Policy & PQC Transition", "desc": "Risk posture, migration guidance, hybrid schedules." }
 }
