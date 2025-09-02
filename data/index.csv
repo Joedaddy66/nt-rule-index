@@ -1,0 +1,5 @@
+﻿id,title,source,drive_url,tags,summary,next_action,notes
+doc-lambda-law,Universal λ-Resilience Law (draft),Google Drive,,RSA_STRUCTURE;FACTORIZATION;CRYPTO_POLICY_PQC,"Defines λ and benchmarks GNFS/ECM bite points.","Add figures + GNFS stage notes.",""
+sheet-bs,Bond Strength Series (n, BS),Google Drive,,ENTROPY_FEATURES;ANALYTIC_PROB_NT,"Raw BS for features + entropy mapping.","Backfill metadata + ranges.",""
+deck-srf,Spartan Resilience Framework (slides),Google Drive,,ENTROPY_FEATURES;CRYPTO_POLICY_PQC,"Framing: Bond Strength Law; safeguards.","Sync slides to latest terminology.",""
+doc-doctrine,Doctrine of Frequency (Open Codex),Google Drive,,SPECTRAL_METHODS;ANALYTIC_PROB_NT;ENTROPY_FEATURES,"Harmonic lens, anchors, eigenstates.","Add spectral figures + references.",""

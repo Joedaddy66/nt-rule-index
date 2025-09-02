@@ -1,0 +1,263 @@
+﻿# ===== FULL LOCAL SCAFFOLD (copy-paste and run) =====
+# Creates a complete Git repo with docs, MkDocs, workflows, and your SPA HTML from clipboard.
+
+$RepoPath = Join-Path $HOME "Documents\nt-rule-index"
+
+function Write-File { param([string]$Path,[string]$Content)
+  New-Item -ItemType Directory -Force -Path (Split-Path $Path) | Out-Null
+  $Content | Set-Content -Encoding utf8 $Path
+}
+function Warn($msg){ Write-Host "WARNING: $msg" -ForegroundColor Yellow }
+
+# --- folders ---
+New-Item -ItemType Directory -Force -Path $RepoPath,
+  "$RepoPath\docs","$RepoPath\data","$RepoPath\scripts","$RepoPath\.github\workflows" | Out-Null
+
+# --- README ---
+Write-File (Join-Path $RepoPath "README.md") @'
+# NT Rule Index
+Local-first repository linking Drive artifacts to **Number-Theory Rule Packs** and publishing a MkDocs site.
+
+## Quick start
+1) (Optional) Copy your SPA HTML to clipboard (Ctrl+A, Ctrl+C) and re-run this script to embed it automatically.
+2) python scripts/build_index.py
+3) pip install -r requirements.txt
+4) mkdocs serve   # http://127.0.0.1:8000
+5) git add -A && git commit -m "init"
+6) git remote add origin <YOUR_GITHUB_REPO_URL> && git push -u origin main
+'@
+
+# --- .gitignore ---
+Write-File (Join-Path $RepoPath ".gitignore") @'
+__pycache__/
+*.pyc
+.env
+site/
+'@
+
+# --- RULE_PACKS.json ---
+Write-File (Join-Path $RepoPath "RULE_PACKS.json") @'
+{
+  "FACTORIZATION": {
+    "title": "Factorization & Smoothness",
+    "desc": "ECM/QS/GNFS behavior, semiprimes, smoothness, divisor metrics."
+  },
+  "RSA_STRUCTURE": {
+    "title": "RSA Structure (p,q geometry, λ)",
+    "desc": "Keygen heuristics, |p - q| effects, λ-resilience."
+  },
+  "ANALYTIC_PROB_NT": {
+    "title": "Analytic/Probabilistic NT",
+    "desc": "Prime density, sieves, PNT-adjacent heuristics."
+  },
+  "SPECTRAL_METHODS": {
+    "title": "Spectral / Frequency Methods",
+    "desc": "Fourier views on primes, gaps, and numerical signals."
+  },
+  "ENTROPY_FEATURES": {
+    "title": "Entropy & Feature Engineering",
+    "desc": "Bond Strength (BS), anchors, eigenstates, primorial hubs."
+  },
+  "CRYPTO_POLICY_PQC": {
+    "title": "Crypto Policy & PQC Transition",
+    "desc": "Risk posture, migration guidance, hybrid schedules."
+  }
+}
+'@
+
+# --- data/index.csv (seed) ---
+Write-File (Join-Path $RepoPath "data\index.csv") @'
+id,title,source,drive_url,tags,summary,next_action,notes
+doc-lambda-law,Universal λ-Resilience Law (draft),Google Drive,,RSA_STRUCTURE;FACTORIZATION;CRYPTO_POLICY_PQC,"Defines λ and benchmarks GNFS/ECM bite points.","Add figures + GNFS stage notes.",""
+sheet-bs,Bond Strength Series (n, BS),Google Drive,,ENTROPY_FEATURES;ANALYTIC_PROB_NT,"Raw BS for features + entropy mapping.","Backfill metadata + ranges.",""
+deck-srf,Spartan Resilience Framework (slides),Google Drive,,ENTROPY_FEATURES;CRYPTO_POLICY_PQC,"Framing: Bond Strength Law; safeguards.","Sync slides to latest terminology.",""
+doc-doctrine,Doctrine of Frequency (Open Codex),Google Drive,,SPECTRAL_METHODS;ANALYTIC_PROB_NT;ENTROPY_FEATURES,"Harmonic lens, anchors, eigenstates.","Add spectral figures + references.",""
+'@
+
+# --- scripts/build_index.py ---
+Write-File (Join-Path $RepoPath "scripts\build_index.py") @'
+import csv, json, os
+from collections import defaultdict
+
+ROOT = os.path.dirname(os.path.dirname(__file__))
+RULE_JSON = os.path.join(ROOT, "RULE_PACKS.json")
+CSV_PATH  = os.path.join(ROOT, "data", "index.csv")
+OUT_MD    = os.path.join(ROOT, "docs", "index.md")
+
+def load_rules():
+    with open(RULE_JSON, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def read_rows():
+    with open(CSV_PATH, "r", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+def normalize_tags(s):
+    if not s: return []
+    return [t.strip() for t in s.split(";") if t.strip()]
+
+def md_link(title, url):
+    return f"[{title}]({url})" if url and url.strip() else title
+
+def build_index(rows, rules):
+    by_tag = defaultdict(list)
+    for row in rows:
+        for t in normalize_tags(row.get("tags","")):
+            by_tag[t].append(row)
+
+    tag_order = list(rules.keys()) + sorted([t for t in by_tag.keys() if t not in rules])
+
+    lines = []
+    lines.append("# Number-Theory Rule Index\n")
+    lines.append("_Auto-generated from `data/index.csv`_\n")
+    lines.append("## Rule Packs\n")
+    for key in rules:
+        lines.append(f"- **{key}** — {rules[key].get('title','')}: {rules[key].get('desc','')}")
+    lines.append("\n---\n")
+
+    for t in tag_order:
+        if t not in by_tag: continue
+        title = rules.get(t, {}).get("title", t)
+        lines.append(f"## {title} ({t})\n")
+        for row in sorted(by_tag[t], key=lambda r: r.get("title","").lower()):
+            link = md_link(row.get("title","(untitled)"), row.get("drive_url",""))
+            summary = row.get("summary","").strip()
+            next_action = row.get("next_action","").strip()
+            notes = row.get("notes","").strip()
+            meta = ", ".join([m for m in [row.get("source","").strip(), row.get("id","").strip()] if m])
+            lines.append(f"- {link}  \n  _{meta}_  \n  {summary if summary else ''}")
+            if next_action: lines.append(f"  \n  **Next:** {next_action}")
+            if notes: lines.append(f"  \n  **Notes:** {notes}")
+            lines.append("")
+        lines.append("---\n")
+    return "\n".join(lines).rstrip() + "\n"
+
+if __name__ == "__main__":
+    rules = load_rules()
+    rows  = read_rows()
+    os.makedirs(os.path.dirname(OUT_MD), exist_ok=True)
+    with open(OUT_MD, "w", encoding="utf-8") as f:
+        f.write(build_index(rows, rules))
+    print(f"Wrote {OUT_MD}")
+'@
+
+# --- docs/index.md (seed) ---
+Write-File (Join-Path $RepoPath "docs\index.md") "# Number-Theory Rule Index`n`n*(seed page; run build_index.py to regenerate)*"
+
+# --- docs/nt-framework.html from clipboard (stub if empty) ---
+$SpaPath = Join-Path $RepoPath "docs\nt-framework.html"
+$clip = ""
+try { $clip = Get-Clipboard -Raw } catch { $clip = "" }
+if (-not $clip -or ($clip.Trim()).Length -eq 0) {
+  Warn "Clipboard empty; writing a stub SPA. Overwrite docs\nt-framework.html later."
+  Write-File $SpaPath @'
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>NT Framework (Stub)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:Inter,system-ui,sans-serif;background:#FDFBF8;color:#40322C}</style>
+</head><body class="p-8"><h1 class="text-3xl font-bold mb-2">NT Framework (Stub)</h1>
+<p>Paste your full SPA HTML into <code>docs/nt-framework.html</code> and commit.</p></body></html>
+'@
+} else {
+  Write-File $SpaPath $clip
+}
+
+# --- mkdocs.yml ---
+Write-File (Join-Path $RepoPath "mkdocs.yml") @'
+site_name: NT Rule Index
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.sections
+    - content.code.copy
+nav:
+  - Home: index.md
+  - NT Framework (SPA): nt-framework.html
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - footnotes
+  - attr_list
+extra:
+  generator: false
+'@
+
+# --- requirements.txt ---
+Write-File (Join-Path $RepoPath "requirements.txt") @'
+mkdocs>=1.6
+mkdocs-material>=9.5
+'@
+
+# --- GitHub Actions: site-deploy.yml ---
+Write-File (Join-Path $RepoPath ".github\workflows\site-deploy.yml") @'
+name: site-deploy
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build docs index (CSV -> docs/index.md)
+        run: |
+          if [ -f scripts/build_index.py ]; then
+            python scripts/build_index.py || echo "build_index.py failed (continuing)"
+          fi
+      - name: Install MkDocs
+        run: pip install -r requirements.txt
+      - name: Build site
+        run: mkdocs build --strict --verbose
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+'@
+
+# --- git init + first commit ---
+Push-Location $RepoPath
+$gitOk = $true
+try { git --version | Out-Null } catch { $gitOk = $false; Warn "Git not found in PATH. Install Git, then run: git init -b main; git add -A; git commit -m 'init'" }
+if ($gitOk) {
+  try { git init -b main | Out-Null } catch { git init | Out-Null; git branch -M main }
+  git add -A
+  git commit -m "init: NT Rule Index scaffold + SPA + MkDocs + CI" | Out-Null
+}
+Pop-Location
+
+Write-Host "`n✅ All files created at: $RepoPath"
+Write-Host "Next:"
+Write-Host "  1) python `"$RepoPath\scripts\build_index.py`""
+Write-Host "  2) pip install -r `"$RepoPath\requirements.txt`""
+Write-Host "  3) mkdocs serve   # preview at http://127.0.0.1:8000"
+Write-Host "  4) git remote add origin <YOUR_GITHUB_REPO_URL> && git push -u origin main"
+Write-Host "  5) In GitHub → Settings → Pages: Source = GitHub Actions"
+# ===== end =====
+
