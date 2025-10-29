@@ -1,6 +1,6 @@
 mkdocs>=1.6
 mkdocs-material>=9.5
-fastapi>=0.109.0
+fastapi>=0.109.1
 uvicorn[standard]>=0.27.0
 python-multipart>=0.0.6
 pandas>=2.0.0

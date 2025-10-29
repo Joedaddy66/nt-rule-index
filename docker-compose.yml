@@ -6,7 +6,8 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - API_BEARER_TOKEN=dev-token-12345
+      # Use environment variable or generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'
+      - API_BEARER_TOKEN=${API_BEARER_TOKEN:-dev-token-change-this-in-production}
       - PORT=8080
     volumes:
       - ./artifacts:/app/artifacts

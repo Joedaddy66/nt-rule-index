@@ -22,7 +22,14 @@ import pandas as pd
 # Configuration
 ARTIFACTS_DIR = Path("artifacts")
 ARTIFACTS_DIR.mkdir(exist_ok=True)
-BEARER_TOKEN = os.getenv("API_BEARER_TOKEN", "default-secure-token-change-me")
+
+# Security: Require API_BEARER_TOKEN to be set, no insecure default
+BEARER_TOKEN = os.getenv("API_BEARER_TOKEN")
+if not BEARER_TOKEN:
+    raise ValueError(
+        "API_BEARER_TOKEN environment variable must be set. "
+        "Generate a secure random token: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+    )
 
 # Initialize FastAPI
 app = FastAPI(
@@ -369,21 +376,25 @@ async def deploy_model(
                 )
         
         # Validate keys (mock validation - in production, this would be more sophisticated)
-        if not request.human_key or len(request.human_key) < 8:
-            raise HTTPException(status_code=400, detail="Invalid human approval key")
+        if not request.human_key or len(request.human_key) < 16:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid human approval key: minimum 16 characters required"
+            )
         
-        if not request.logic_key or len(request.logic_key) < 8:
-            raise HTTPException(status_code=400, detail="Invalid logic validation key")
+        if not request.logic_key or len(request.logic_key) < 16:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid logic validation key: minimum 16 characters required"
+            )
         
         # Mock deployment to model registry
         model_registry_url = f"https://model-registry.example.com/models/ra-longevity/{request.run_id}"
         
-        # Create deployment record
+        # Create deployment record (keys are not logged for security)
         deployment_record = {
             "run_id": request.run_id,
             "deployed_at": datetime.now().isoformat(),
-            "human_key": request.human_key[:4] + "****",  # Partially masked
-            "logic_key": request.logic_key[:4] + "****",  # Partially masked
             "dkil_validated": request.dkil_validation,
             "model_registry_url": model_registry_url
         }

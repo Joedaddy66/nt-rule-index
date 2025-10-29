@@ -7,9 +7,11 @@ Tests all endpoints to ensure they work correctly.
 import requests
 import time
 import sys
+import os
 
 BASE_URL = "http://localhost:8080"
-TOKEN = "test-token-12345"
+# Use environment variable for token to avoid hard-coding
+TOKEN = os.getenv("API_BEARER_TOKEN", "test-token-12345")
 
 def print_test(test_name):
     print(f"\n{'='*60}")
@@ -104,8 +106,8 @@ def test_deploy(run_id):
     headers = {"Authorization": f"Bearer {TOKEN}"}
     data = {
         "run_id": run_id,
-        "human_key": "human-approval-key-12345",
-        "logic_key": "logic-validation-key-67890",
+        "human_key": "human-approval-key-123456789012",
+        "logic_key": "logic-validation-key-098765432101",
         "dkil_validation": False  # Set to False since we may not have threshold met
     }
     
