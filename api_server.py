@@ -8,6 +8,7 @@ import os
 import json
 import zipfile
 import uuid
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any, List
@@ -47,6 +48,27 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Security(security))
     if credentials.credentials != BEARER_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid authentication token")
     return credentials.credentials
+
+
+def validate_run_id(run_id: str) -> str:
+    """
+    Validate and sanitize run_id to prevent path traversal attacks.
+    Only allows UUID format (alphanumeric and hyphens).
+    
+    Security Note: This function acts as a sanitizer for CodeQL path-injection alerts.
+    By validating that run_id matches strict UUID format (no slashes, dots, or special chars),
+    we prevent directory traversal attacks like '../../../etc/passwd'.
+    """
+    # UUID format: 8-4-4-4-12 hexadecimal characters
+    uuid_pattern = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE)
+    
+    if not uuid_pattern.match(run_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid run_id format. Must be a valid UUID."
+        )
+    
+    return run_id
 
 
 # Pydantic Models
@@ -302,6 +324,9 @@ async def get_report(
     Checks DKIL before serving if enabled.
     """
     try:
+        # Validate run_id to prevent path traversal
+        run_id = validate_run_id(run_id)
+        
         json_path = ARTIFACTS_DIR / f"report_{run_id}.json"
         html_path = ARTIFACTS_DIR / f"report_{run_id}.html"
         
@@ -340,6 +365,9 @@ async def download_report_bundle(
     token: str = Depends(verify_token)
 ):
     """Download the bundle.zip for a specific run."""
+    # Validate run_id to prevent path traversal
+    run_id = validate_run_id(run_id)
+    
     bundle_path = ARTIFACTS_DIR / f"bundle_{run_id}.zip"
     
     if not bundle_path.exists():
@@ -362,10 +390,13 @@ async def deploy_model(
     Validates DKIL and requires two keys (human + logic).
     """
     try:
+        # Validate run_id to prevent path traversal
+        run_id = validate_run_id(request.run_id)
+        
         # Validate run_id exists
-        json_path = ARTIFACTS_DIR / f"report_{request.run_id}.json"
+        json_path = ARTIFACTS_DIR / f"report_{run_id}.json"
         if not json_path.exists():
-            raise HTTPException(status_code=404, detail=f"Report for run_id '{request.run_id}' not found")
+            raise HTTPException(status_code=404, detail=f"Report for run_id '{run_id}' not found")
         
         # Validate DKIL if required
         if request.dkil_validation:
@@ -389,24 +420,24 @@ async def deploy_model(
             )
         
         # Mock deployment to model registry
-        model_registry_url = f"https://model-registry.example.com/models/ra-longevity/{request.run_id}"
+        model_registry_url = f"https://model-registry.example.com/models/ra-longevity/{run_id}"
         
         # Create deployment record (keys are not logged for security)
         deployment_record = {
-            "run_id": request.run_id,
+            "run_id": run_id,
             "deployed_at": datetime.now().isoformat(),
             "dkil_validated": request.dkil_validation,
             "model_registry_url": model_registry_url
         }
         
-        deployment_path = ARTIFACTS_DIR / f"deployment_{request.run_id}.json"
+        deployment_path = ARTIFACTS_DIR / f"deployment_{run_id}.json"
         with open(deployment_path, "w") as f:
             json.dump(deployment_record, f, indent=2)
         
         return DeployResponse(
             status="success",
             model_registry_url=model_registry_url,
-            message=f"Model {request.run_id} successfully deployed to registry"
+            message=f"Model {run_id} successfully deployed to registry"
         )
     
     except HTTPException:
