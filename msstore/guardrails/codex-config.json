@@ -43,7 +43,7 @@
           "maxNestingDepth": 4
         },
         "coverage": {
-          "minLinecoverage": 80,
+          "minLineCoverage": 80,
           "minBranchCoverage": 75
         }
       }

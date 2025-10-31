@@ -60,8 +60,33 @@ Write-Host "`nBuilding MSIX package..." -ForegroundColor Yellow
 $msixPath = Join-Path $outputDir "NTRuleIndex_${Version}_x64.msix"
 
 try {
-    # Note: This assumes makeappx.exe is in PATH or Windows SDK is installed
-    $makeappx = Get-Command makeappx.exe -ErrorAction Stop
+    # Try to find makeappx.exe in PATH or common SDK locations
+    $makeappx = $null
+    
+    try {
+        $makeappx = Get-Command makeappx.exe -ErrorAction Stop
+    } catch {
+        # Try common Windows SDK installation paths
+        $sdkPaths = @(
+            "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\makeappx.exe",
+            "${env:ProgramFiles}\Windows Kits\10\bin\*\x64\makeappx.exe"
+        )
+        
+        foreach ($pattern in $sdkPaths) {
+            $found = Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue | 
+                     Sort-Object -Property FullName -Descending | 
+                     Select-Object -First 1
+            
+            if ($found) {
+                $makeappx = $found
+                break
+            }
+        }
+    }
+    
+    if (-not $makeappx) {
+        throw "makeappx.exe not found in PATH or common SDK locations"
+    }
     
     & $makeappx pack /d $manifestDir /p $msixPath /o
     

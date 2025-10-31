@@ -70,7 +70,16 @@ if command -v makeappx &> /dev/null || command -v makeappx.exe &> /dev/null; the
     fi
 elif [ -n "$WSLENV" ]; then
     # Running in WSL, try Windows makeappx
-    MAKEAPPX_CMD="/mnt/c/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/makeappx.exe"
+    # Try to detect SDK version dynamically
+    SDK_BASE="/mnt/c/Program Files (x86)/Windows Kits/10/bin"
+    if [ -d "$SDK_BASE" ]; then
+        # Find the latest SDK version
+        LATEST_SDK=$(ls -1 "$SDK_BASE" | grep -E '^10\.0\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+        if [ -n "$LATEST_SDK" ]; then
+            MAKEAPPX_CMD="$SDK_BASE/$LATEST_SDK/x64/makeappx.exe"
+        fi
+    fi
+    
     if [ ! -f "$MAKEAPPX_CMD" ]; then
         echo "⚠ Warning: makeappx not found. Install Windows SDK or use PowerShell script on Windows"
         echo "Skipping MSIX build (manifest and configuration are ready)"
