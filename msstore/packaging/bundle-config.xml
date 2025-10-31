@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Bundle xmlns="http://schemas.microsoft.com/appx/2013/bundle"
+        xmlns:b4="http://schemas.microsoft.com/appx/2018/bundle"
+        IgnorableNamespaces="b4">
+  <Identity Name="RALongevity.NTRuleIndex"
+            Publisher="CN=RALongevity"
+            Version="1.0.0.0" />
+  
+  <Packages>
+    <!-- Add package entries here for different architectures -->
+    <!-- Example:
+    <Package Type="application"
+             Version="1.0.0.0"
+             Architecture="x64"
+             FileName="NTRuleIndex_1.0.0.0_x64.msix"
+             Offset="0"
+             Size="0" />
+    <Package Type="application"
+             Version="1.0.0.0"
+             Architecture="arm64"
+             FileName="NTRuleIndex_1.0.0.0_arm64.msix"
+             Offset="0"
+             Size="0" />
+    -->
+  </Packages>
+</Bundle>

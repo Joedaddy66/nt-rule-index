@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json.schemastore.org/msix-package.json",
+  "package": {
+    "identity": {
+      "name": "RALongevity.NTRuleIndex",
+      "publisher": "CN=RALongevity",
+      "version": "1.0.0.0",
+      "processorArchitecture": "x64"
+    },
+    "properties": {
+      "displayName": "RA Longevity - NT Rule Index",
+      "publisherDisplayName": "RA Longevity",
+      "description": "FastAPI microservice for Number Theory Rule Index with Codex guardrails and attestation support",
+      "logo": "Assets/StoreLogo.png"
+    },
+    "pricing": {
+      "model": "free",
+      "trialPeriod": null,
+      "basePrice": "0.00",
+      "currency": "USD"
+    },
+    "categories": [
+      "DeveloperTools",
+      "Productivity"
+    ],
+    "targetDeviceFamily": {
+      "name": "Windows.Desktop",
+      "minVersion": "10.0.17763.0",
+      "maxVersionTested": "10.0.22621.0"
+    },
+    "capabilities": [
+      "internetClient",
+      "runFullTrust"
+    ]
+  },
+  "build": {
+    "outputPath": "../packaging/output",
+    "bundlePath": "../packaging/bundle",
+    "assetsPath": "Assets"
+  },
+  "metadata": {
+    "codexVersion": "1.0",
+    "attestationRequired": true,
+    "guardrailsEnabled": true,
+    "emissionFormats": ["SARIF", "CSV", "XLSX"]
+  }
+}

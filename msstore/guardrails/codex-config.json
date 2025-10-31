@@ -1,0 +1,138 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "codex": {
+    "version": "1.0",
+    "framework": "RA-Longevity-Codex",
+    "enabled": true,
+    "strictMode": true
+  },
+  "guardrails": {
+    "security": {
+      "enabled": true,
+      "rules": [
+        {
+          "id": "SEC-001",
+          "name": "NoHardcodedSecrets",
+          "severity": "error",
+          "description": "Detect hardcoded secrets and credentials"
+        },
+        {
+          "id": "SEC-002",
+          "name": "SecureConnections",
+          "severity": "warning",
+          "description": "Ensure all network connections use TLS/SSL"
+        },
+        {
+          "id": "SEC-003",
+          "name": "InputValidation",
+          "severity": "error",
+          "description": "Validate all user inputs to prevent injection attacks"
+        }
+      ]
+    },
+    "compliance": {
+      "enabled": true,
+      "standards": ["NIST", "CIS", "OWASP"],
+      "attestationRequired": true
+    },
+    "quality": {
+      "enabled": true,
+      "metrics": {
+        "codeComplexity": {
+          "maxCyclomaticComplexity": 10,
+          "maxNestingDepth": 4
+        },
+        "coverage": {
+          "minLinecoverage": 80,
+          "minBranchCoverage": 75
+        }
+      }
+    }
+  },
+  "emission": {
+    "formats": [
+      {
+        "type": "SARIF",
+        "version": "2.1.0",
+        "outputPath": "output/analysis.sarif",
+        "includeStackTraces": true,
+        "includeCodeFlows": true
+      },
+      {
+        "type": "CSV",
+        "outputPath": "output/metrics.csv",
+        "fields": [
+          "ruleId",
+          "severity",
+          "location",
+          "message",
+          "timestamp"
+        ],
+        "includeHeader": true
+      },
+      {
+        "type": "XLSX",
+        "outputPath": "output/inventory.xlsx",
+        "sheets": [
+          {
+            "name": "Package Inventory",
+            "columns": ["Component", "Version", "License", "Vulnerabilities"]
+          },
+          {
+            "name": "Security Findings",
+            "columns": ["Rule", "Severity", "File", "Line", "Description"]
+          },
+          {
+            "name": "Compliance Status",
+            "columns": ["Standard", "Control", "Status", "Evidence"]
+          }
+        ]
+      }
+    ],
+    "archivePath": "output/attestation-bundle.zip",
+    "includeMetadata": true,
+    "signOutput": true
+  },
+  "scanning": {
+    "targets": [
+      "**/*.py",
+      "**/*.js",
+      "**/*.ts",
+      "requirements.txt",
+      "package.json"
+    ],
+    "exclude": [
+      "**/node_modules/**",
+      "**/venv/**",
+      "**/__pycache__/**",
+      "**/test/**",
+      "**/tests/**"
+    ],
+    "scanners": {
+      "staticAnalysis": {
+        "enabled": true,
+        "tools": ["bandit", "semgrep", "pylint"]
+      },
+      "dependencyCheck": {
+        "enabled": true,
+        "tools": ["safety", "pip-audit"]
+      },
+      "secretScanning": {
+        "enabled": true,
+        "patterns": [
+          "password",
+          "api_key",
+          "secret",
+          "token",
+          "credential"
+        ]
+      }
+    }
+  },
+  "reporting": {
+    "generateSummary": true,
+    "summaryPath": "output/summary.md",
+    "includeRecommendations": true,
+    "notificationChannels": []
+  }
+}

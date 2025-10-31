@@ -1,0 +1,210 @@
+name: Microsoft Store Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version (e.g., 1.0.0.0)'
+        required: true
+        default: '1.0.0.0'
+      environment:
+        description: 'Deployment environment'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+        default: 'staging'
+
+env:
+  MSIX_PACKAGE_NAME: NTRuleIndex
+  PUBLISHER_NAME: RALongevity
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "release") {
+            $version = "${{ github.event.release.tag_name }}" -replace '^v', ''
+          } else {
+            $version = "${{ github.event.inputs.version }}"
+          }
+          
+          # Ensure version is in format x.x.x.x
+          if ($version -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+            if ($version -match '^\d+\.\d+\.\d+$') {
+              $version = "${version}.0"
+            } else {
+              Write-Error "Invalid version format: $version"
+              exit 1
+            }
+          }
+          
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Package version: $version"
+      
+      - name: Install Windows SDK (for makeappx and signtool)
+        shell: pwsh
+        run: |
+          # Check if Windows SDK tools are available
+          $makeappx = Get-Command makeappx.exe -ErrorAction SilentlyContinue
+          $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue
+          
+          if ($makeappx -and $signtool) {
+            Write-Host "✓ Windows SDK tools already available"
+          } else {
+            Write-Host "Installing Windows SDK..."
+            choco install windows-sdk-10-version-2004-all -y
+          }
+      
+      - name: Run Codex Guardrails
+        shell: pwsh
+        run: |
+          cd msstore/guardrails
+          .\run-guardrails.ps1 -Version "${{ steps.version.outputs.VERSION }}"
+      
+      - name: Build MSIX Package
+        shell: pwsh
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          cd msstore/packaging
+          .\build-msix.ps1 -Version "$env:PACKAGE_VERSION"
+      
+      - name: Sign MSIX Package
+        if: ${{ secrets.SIGNING_CERTIFICATE != '' }}
+        shell: pwsh
+        env:
+          CERT_BASE64: ${{ secrets.SIGNING_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          # Decode certificate from base64
+          $certBytes = [Convert]::FromBase64String($env:CERT_BASE64)
+          $certPath = "signing-cert.pfx"
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+          
+          # Sign package
+          $msixPath = "msstore/packaging/output/${{ env.MSIX_PACKAGE_NAME }}_${{ steps.version.outputs.VERSION }}_x64.msix"
+          signtool sign /fd SHA256 /f $certPath /p $env:CERT_PASSWORD $msixPath
+          
+          # Clean up certificate
+          Remove-Item $certPath
+          
+          Write-Host "✓ Package signed successfully"
+      
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: msix-package-${{ steps.version.outputs.VERSION }}
+          path: |
+            msstore/packaging/output/*.msix
+            msstore/guardrails/output/*.sarif
+            msstore/guardrails/output/*.csv
+            msstore/guardrails/output/*.xlsx
+            msstore/guardrails/output/*.md
+          retention-days: 90
+      
+      - name: Create Attestation Bundle
+        shell: pwsh
+        run: |
+          $bundlePath = "msstore/packaging/output/attestation-bundle-${{ steps.version.outputs.VERSION }}.zip"
+          
+          Compress-Archive -Path @(
+            "msstore/guardrails/output/*",
+            "msstore/manifest/package-metadata.json"
+          ) -DestinationPath $bundlePath -Force
+          
+          Write-Host "✓ Attestation bundle created: $bundlePath"
+      
+      - name: Submit to Partner Center
+        if: github.event_name == 'release' || github.event.inputs.environment == 'production'
+        shell: pwsh
+        env:
+          PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+          PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+          PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+          PARTNER_CENTER_APP_ID: ${{ secrets.PARTNER_CENTER_APP_ID }}
+        run: |
+          # Install Microsoft Store submission module
+          Install-Module -Name StoreBroker -Force -Scope CurrentUser
+          
+          # Authenticate with Partner Center
+          $cred = @{
+            TenantId = $env:PARTNER_CENTER_TENANT_ID
+            ClientId = $env:PARTNER_CENTER_CLIENT_ID
+            ClientSecret = $env:PARTNER_CENTER_CLIENT_SECRET
+          }
+          
+          Set-StoreBrokerAuthentication @cred
+          
+          # Create submission
+          $appId = $env:PARTNER_CENTER_APP_ID
+          $msixPath = "msstore/packaging/output/${{ env.MSIX_PACKAGE_NAME }}_${{ steps.version.outputs.VERSION }}_x64.msix"
+          
+          try {
+            Write-Host "Creating submission for app $appId..."
+            $submission = New-ApplicationSubmission -AppId $appId -Force
+            
+            Write-Host "Uploading package..."
+            Set-ApplicationSubmissionPackage -SubmissionId $submission.id -PackagePath $msixPath
+            
+            Write-Host "Committing submission..."
+            Complete-ApplicationSubmission -SubmissionId $submission.id
+            
+            Write-Host "✓ Successfully submitted to Microsoft Partner Center"
+          } catch {
+            Write-Error "Failed to submit to Partner Center: $_"
+            Write-Host "Package is available as artifact for manual submission"
+          }
+      
+      - name: Create Release Assets
+        if: github.event_name == 'release'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $msixPath = "msstore/packaging/output/${{ env.MSIX_PACKAGE_NAME }}_${version}_x64.msix"
+          $attestationPath = "msstore/packaging/output/attestation-bundle-${version}.zip"
+          
+          gh release upload "${{ github.event.release.tag_name }}" `
+            $msixPath `
+            $attestationPath `
+            --clobber
+          
+          Write-Host "✓ Release assets uploaded"
+      
+      - name: Generate Summary
+        if: always()
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $summaryPath = "msstore/guardrails/output/summary.md"
+          
+          if (Test-Path $summaryPath) {
+            Get-Content $summaryPath >> $env:GITHUB_STEP_SUMMARY
+          }
+          
+          echo "## Build Information" >> $env:GITHUB_STEP_SUMMARY
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "- **Version:** $version" >> $env:GITHUB_STEP_SUMMARY
+          echo "- **Package:** ${{ env.MSIX_PACKAGE_NAME }}" >> $env:GITHUB_STEP_SUMMARY
+          echo "- **Publisher:** ${{ env.PUBLISHER_NAME }}" >> $env:GITHUB_STEP_SUMMARY
+          echo "- **Workflow:** ${{ github.workflow }}" >> $env:GITHUB_STEP_SUMMARY
+          echo "- **Run:** ${{ github.run_number }}" >> $env:GITHUB_STEP_SUMMARY
