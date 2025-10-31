@@ -39,6 +39,6 @@ This is a local-first repository that links Drive artifacts to **Number-Theory R
 - Test the MkDocs site builds without errors: `mkdocs build --strict`
 
 ## Important Notes
-- Some source files may have UTF-8 BOM markers; handle with `utf-8-sig` encoding when needed
+- **UTF-8 BOM Warning**: Several files (CSV, JSON, Python scripts) have UTF-8 BOM markers. When reading these files, use `utf-8-sig` encoding to avoid parsing errors. The current build script uses `utf-8` which may cause issues with the JSON file.
 - The site is deployed automatically via GitHub Actions on push to main/master
 - The docs index is auto-generated; only edit the source CSV and JSON files
