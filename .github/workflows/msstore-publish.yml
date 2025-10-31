@@ -22,6 +22,10 @@ env:
   MSIX_PACKAGE_NAME: NTRuleIndex
   PUBLISHER_NAME: RALongevity
 
+permissions:
+  contents: write  # For creating release assets
+  actions: read    # For workflow access
+
 jobs:
   build-and-publish:
     runs-on: windows-latest
