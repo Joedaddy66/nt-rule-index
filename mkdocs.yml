@@ -8,6 +8,7 @@ theme:
 nav:
   - Home: index.md
   - NT Framework (SPA): nt-framework.html
+  - Codex Guardrails: codex-guardrails.md
 markdown_extensions:
   - toc:
       permalink: true
