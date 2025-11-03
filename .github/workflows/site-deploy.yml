@@ -24,7 +24,7 @@ jobs:
       - name: Build docs index (CSV -> docs/index.md)
         run: |
           if [ -f scripts/build_index.py ]; then
-            python scripts/build_index.py || echo "build_index.py failed (continuing)"
+            python scripts/build_index.py
           fi
       - name: Install MkDocs
         run: pip install -r requirements.txt

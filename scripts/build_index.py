@@ -6,13 +6,23 @@ RULE_JSON = os.path.join(ROOT, "RULE_PACKS.json")
 CSV_PATH  = os.path.join(ROOT, "data", "index.csv")
 OUT_MD    = os.path.join(ROOT, "docs", "index.md")
 
+def val(d, k):
+    """Safely get and normalize a value from a dict, handling None and empty strings."""
+    return (d.get(k) or "").strip()
+
 def load_rules():
-    with open(RULE_JSON, "r", encoding="utf-8") as f:
+    with open(RULE_JSON, "r", encoding="utf-8-sig") as f:
         return json.load(f)
 
 def read_rows():
-    with open(CSV_PATH, "r", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+    with open(CSV_PATH, "r", encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f))
+    # Skip fully-empty rows
+    filtered = []
+    for row in rows:
+        if any(val(row, k) for k in ['id','title','drive_url','tags','summary','next_action','notes','source']):
+            filtered.append(row)
+    return filtered
 
 def normalize_tags(s):
     if not s: return []
@@ -24,7 +34,7 @@ def md_link(title, url):
 def build_index(rows, rules):
     by_tag = defaultdict(list)
     for row in rows:
-        for t in normalize_tags(row.get("tags","")):
+        for t in normalize_tags(val(row, "tags")):
             by_tag[t].append(row)
 
     tag_order = list(rules.keys()) + sorted([t for t in by_tag.keys() if t not in rules])
@@ -41,12 +51,12 @@ def build_index(rows, rules):
         if t not in by_tag: continue
         title = rules.get(t, {}).get("title", t)
         lines.append(f"## {title} ({t})\n")
-        for row in sorted(by_tag[t], key=lambda r: r.get("title","").lower()):
-            link = md_link(row.get("title","(untitled)"), row.get("drive_url",""))
-            summary = (row.get("summary","") or "").strip()
-            next_action = (row.get("next_action","") or "").strip()
-            notes = (row.get("notes","") or "").strip()
-            meta = ", ".join([m for m in [row.get("source","").strip(), row.get("id","").strip()] if m])
+        for row in sorted(by_tag[t], key=lambda r: val(r, "title").lower()):
+            link = md_link(val(row, "title") or "(untitled)", val(row, "drive_url"))
+            summary = val(row, "summary")
+            next_action = val(row, "next_action")
+            notes = val(row, "notes")
+            meta = ", ".join([m for m in [val(row, "source"), val(row, "id")] if m])
             lines.append(f"- {link}  \n  _{meta}_  \n  {summary}")
             if next_action: lines.append(f"  \n  **Next:** {next_action}")
             if notes: lines.append(f"  \n  **Notes:** {notes}")
