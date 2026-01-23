@@ -11,7 +11,10 @@ import os
 
 BASE_URL = "http://localhost:8080"
 # Use environment variable for token to avoid hard-coding
-TOKEN = os.getenv("API_BEARER_TOKEN", "test-token-12345")
+TOKEN = os.getenv("API_BEARER_TOKEN")
+if not TOKEN:
+    print("Error: API_BEARER_TOKEN environment variable is not set. Please set it before running the tests.", file=sys.stderr)
+    sys.exit(1)
 
 def print_test(test_name):
     print(f"\n{'='*60}")
