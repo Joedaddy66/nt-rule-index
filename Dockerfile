@@ -17,8 +17,6 @@ RUN mkdir -p /app/artifacts
 
 # Set environment variables
 ENV PORT=8080
-ENV API_BEARER_TOKEN=default-secure-token-change-me
-
 # Expose port
 EXPOSE 8080
 
