@@ -6,8 +6,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Use environment variable or generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'
-      - API_BEARER_TOKEN=${API_BEARER_TOKEN:-dev-token-change-this-in-production}
+      # !!! WARNING: INSECURE DEFAULT TOKEN FOR DEVELOPMENT ONLY !!!
+      # Set API_BEARER_TOKEN in your environment for production. Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'
+      - API_BEARER_TOKEN=${API_BEARER_TOKEN:-INSECURE-DEV-TOKEN-CHANGE-ME}
       - PORT=8080
     volumes:
       - ./artifacts:/app/artifacts
