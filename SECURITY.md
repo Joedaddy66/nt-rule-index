@@ -25,7 +25,7 @@ This document summarizes the security measures implemented in the RA Longevity M
 - **No Key Logging**: Security keys are never logged or stored in deployment records
 
 ### 4. Dependency Security
-- **FastAPI**: Using version 0.109.1+ to address ReDoS vulnerability (CVE-2024-XXXX)
+- **FastAPI**: Using version 0.109.1+ to address a ReDoS vulnerability
 - **Regular Updates**: Dependencies are specified with minimum secure versions
 
 ## CodeQL Findings
