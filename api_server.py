@@ -16,7 +16,7 @@ from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, HTTPException, Security, UploadFile, File, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import pandas as pd
 
